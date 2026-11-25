@@ -569,6 +569,35 @@ details.more > summary::-webkit-details-marker { display: none; }
   .ps-track { scroll-behavior: auto; }
   .ps-btn { transition: none; }
 }
+/* Background music toggle */
+.bgm-toggle {
+  flex: none; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 10px;
+  border-radius: 999px; border: 1px solid rgb(255 255 255 / .16); background: rgb(255 255 255 / .06);
+  color: rgb(255 255 255 / .82); font: inherit; font-size: .8125rem; font-weight: 600; letter-spacing: -0.01em;
+  cursor: pointer; transition: background-color .25s ease, border-color .25s ease, color .25s ease;
+}
+.bgm-toggle:hover { background: rgb(255 255 255 / .12); color: var(--paper); }
+.bgm-toggle:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.bgm-toggle.is-on { background: rgb(201 169 110 / .2); border-color: rgb(201 169 110 / .55); color: var(--paper); }
+.bgm-ico { width: 18px; height: 18px; display: grid; place-items: center; color: var(--gold); }
+.bgm-note { width: 18px; height: 18px; display: block; }
+.bgm-eq { display: none; align-items: flex-end; justify-content: center; gap: 2px; width: 16px; height: 14px; }
+.bgm-eq i { width: 3px; height: 40%; border-radius: 2px; background: currentColor; animation: bgm-eq 1.1s ease-in-out infinite; }
+.bgm-eq i:nth-child(2) { animation-delay: -.37s; }
+.bgm-eq i:nth-child(3) { animation-delay: -.74s; }
+.bgm-toggle.is-on .bgm-note { display: none; }
+.bgm-toggle.is-on .bgm-eq { display: flex; }
+@keyframes bgm-eq { 0%, 100% { height: 30%; } 50% { height: 100%; } }
+@media (max-width: 959px) {
+  .bgm-toggle { width: 36px; padding: 0; justify-content: center; }
+  .bgm-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bgm-eq i { animation: none; }
+  .bgm-eq i:nth-child(1) { height: 55%; }
+  .bgm-eq i:nth-child(2) { height: 100%; }
+  .bgm-eq i:nth-child(3) { height: 70%; }
+}
 </style>
 </head>
 <body>
@@ -587,6 +616,13 @@ details.more > summary::-webkit-details-marker { display: none; }
       <a href="#projects">프로젝트</a>
       <a href="#contact">문의</a>
     </nav>
+    <button class="bgm-toggle" id="bgm-toggle" type="button">
+      <span class="bgm-ico" aria-hidden="true">
+        <svg class="bgm-note" viewBox="0 0 24 24" focusable="false"><path d="M9 17V5.6l10-2.1V15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.6" cy="17" r="2.4" fill="currentColor"/><circle cx="16.6" cy="15" r="2.4" fill="currentColor"/></svg>
+        <span class="bgm-eq"><i></i><i></i><i></i></span>
+      </span>
+      <span class="bgm-label">음악 켜기</span>
+    </button>
   </div>
 </header>
 
@@ -727,7 +763,7 @@ details.more > summary::-webkit-details-marker { display: none; }
         <dd><ul>
           <li><span class="now">현재</span>연성대학교 스포츠재활과 조교수</li>
           <li>글로벌사이버대학교 스포츠건강학부 겸임교수</li>
-          <li>헬스보이짐 본사 교육담당 (평생교육원)</li>
+          <li>(주)바디챌린지 트레이닝 교육담당</li>
           <li>성남시청 직장운동부 육상·복싱 선수트레이너</li>
           <li>차의과학대학원 연구실 부상예방운동 연구원</li>
         </ul></dd>
@@ -752,7 +788,7 @@ details.more > summary::-webkit-details-marker { display: none; }
         <h2 id="education-title">교육 과정</h2>
         <p class="lead">평가부터 컨디셔닝, 트레이닝까지 현장에서 바로 쓰는 8개 과정을 운영합니다. 학교 15시수 분량으로 구성할 수 있습니다.</p>
       </div>
-      <p class="partner">학교 강의는 학생 취업률을 높이기 위한 산학협력으로 이어집니다. 협력 기관은 전국 90여 개 지점을 둔 프랜차이즈 기업 헬스보이짐입니다.</p>
+      <p class="partner">학교 강의는 학생 취업률을 높이기 위한 산학협력으로 이어집니다. 협력 기관은 (주)바디챌린지입니다.</p>
     </div>
     <ol class="tracks" aria-label="15시수 교육 콘텐츠 구성">
       <li><span class="t-num" aria-hidden="true">01</span><h3>평가</h3><p>가동성·안정성 평가, 스페셜 테스트</p></li>
@@ -1378,6 +1414,89 @@ details.more > summary::-webkit-details-marker { display: none; }
     qrOpenBtn.addEventListener("click", openQr);
     qrClose.addEventListener("click", closeQr);
     qr.addEventListener("click", function (e) { if (e.target === qr) closeQr(); });
+  }
+})();
+</script>
+<audio id="bgm" src="bgm-training.mp3" preload="none" loop></audio>
+<script>
+(function () {
+  var btn = document.getElementById("bgm-toggle");
+  var audio = document.getElementById("bgm");
+  if (!btn || !audio) return;
+  var label = btn.querySelector(".bgm-label");
+  var wantOn = false;      // the visitor turned music on
+  var heldByVideo = false; // paused because a training video is playing
+  var fadeTimer = null;
+  var LEVEL = 0.75;        // volume ceiling where the browser allows it
+
+  function render() {
+    btn.classList.toggle("is-on", wantOn);
+    label.textContent = wantOn ? "음악 끄기" : "음악 켜기";
+  }
+  function fade(to, ms, done) {
+    clearInterval(fadeTimer);
+    var from = audio.volume, t0 = Date.now();
+    fadeTimer = setInterval(function () {
+      var k = Math.min(1, (Date.now() - t0) / ms);
+      try { audio.volume = from + (to - from) * k; } catch (e) {}
+      if (k >= 1) { clearInterval(fadeTimer); if (done) done(); }
+    }, 30);
+  }
+  function videoPlaying() {
+    return Array.prototype.some.call(document.querySelectorAll("video"), function (v) {
+      return !v.paused && !v.ended;
+    });
+  }
+  function start() {
+    try { audio.volume = 0; } catch (e) {}
+    var p = audio.play();
+    if (p && p.catch) p.catch(function () { wantOn = false; heldByVideo = false; render(); });
+    fade(LEVEL, 1400);
+    if ("mediaSession" in navigator && window.MediaMetadata) {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: "배경음악", artist: "정재우 포트폴리오" });
+    }
+  }
+  function stop(ms) {
+    fade(0, ms, function () { audio.pause(); });
+  }
+
+  btn.addEventListener("click", function () {
+    wantOn = !wantOn;
+    render();
+    if (wantOn) {
+      if (videoPlaying()) heldByVideo = true; else start();
+    } else {
+      heldByVideo = false;
+      stop(500);
+    }
+  });
+  audio.addEventListener("error", function () { wantOn = false; heldByVideo = false; render(); });
+
+  document.addEventListener("play", function (e) {
+    if (e.target.tagName !== "VIDEO" || !wantOn) return;
+    heldByVideo = true;
+    stop(250);
+  }, true);
+  function resumeAfterVideo(e) {
+    if (e.target.tagName !== "VIDEO") return;
+    setTimeout(function () {
+      if (wantOn && heldByVideo && !videoPlaying() && !document.hidden) { heldByVideo = false; start(); }
+    }, 350);
+  }
+  document.addEventListener("pause", resumeAfterVideo, true);
+  document.addEventListener("ended", resumeAfterVideo, true);
+
+  document.addEventListener("visibilitychange", function () {
+    if (!wantOn) return;
+    if (document.hidden) { clearInterval(fadeTimer); audio.pause(); }
+    else if (!videoPlaying()) { heldByVideo = false; start(); }
+  });
+
+  if ("mediaSession" in navigator) {
+    try {
+      navigator.mediaSession.setActionHandler("pause", function () { wantOn = false; heldByVideo = false; render(); stop(200); });
+      navigator.mediaSession.setActionHandler("play", function () { wantOn = true; render(); start(); });
+    } catch (e) {}
   }
 })();
 </script>
