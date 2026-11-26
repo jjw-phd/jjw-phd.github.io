@@ -569,34 +569,44 @@ details.more > summary::-webkit-details-marker { display: none; }
   .ps-track { scroll-behavior: auto; }
   .ps-btn { transition: none; }
 }
-/* Background music toggle */
+/* Background music: floating toggle */
 .bgm-toggle {
-  flex: none; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 10px;
-  border-radius: 999px; border: 1px solid rgb(255 255 255 / .16); background: rgb(255 255 255 / .06);
-  color: rgb(255 255 255 / .82); font: inherit; font-size: .8125rem; font-weight: 600; letter-spacing: -0.01em;
-  cursor: pointer; transition: background-color .25s ease, border-color .25s ease, color .25s ease;
+  position: fixed; z-index: 80; right: max(18px, env(safe-area-inset-right)); bottom: calc(18px + env(safe-area-inset-bottom));
+  display: inline-flex; align-items: center; gap: 10px; height: 52px; padding: 0 24px 0 18px;
+  border-radius: 999px; border: 1.5px solid rgb(255 255 255 / .45); background: var(--gold); color: var(--ink);
+  font: inherit; font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; cursor: pointer;
+  box-shadow: 0 14px 32px rgb(var(--ink-rgb) / .32), 0 3px 8px rgb(var(--ink-rgb) / .2);
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease, transform .15s ease;
 }
-.bgm-toggle:hover { background: rgb(255 255 255 / .12); color: var(--paper); }
-.bgm-toggle:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.bgm-toggle.is-on { background: rgb(201 169 110 / .2); border-color: rgb(201 169 110 / .55); color: var(--paper); }
-.bgm-ico { width: 18px; height: 18px; display: grid; place-items: center; color: var(--gold); }
-.bgm-note { width: 18px; height: 18px; display: block; }
-.bgm-eq { display: none; align-items: flex-end; justify-content: center; gap: 2px; width: 16px; height: 14px; }
-.bgm-eq i { width: 3px; height: 40%; border-radius: 2px; background: currentColor; animation: bgm-eq 1.1s ease-in-out infinite; }
-.bgm-eq i:nth-child(2) { animation-delay: -.37s; }
-.bgm-eq i:nth-child(3) { animation-delay: -.74s; }
+.bgm-toggle:hover { background: #D6BA84; }
+.bgm-toggle:active { transform: scale(.97); }
+.bgm-toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--night), 0 14px 32px rgb(var(--ink-rgb) / .32); }
+.bgm-toggle:not(.is-on) { background: var(--paper); color: var(--ink); border-color: var(--rule); }
+.bgm-toggle:not(.is-on):hover { background: var(--mist); }
+.bgm-ico { width: 20px; height: 20px; display: grid; place-items: center; color: var(--ink); }
+.bgm-toggle:not(.is-on) .bgm-ico { color: var(--night); }
+.bgm-note { width: 20px; height: 20px; display: block; }
+.bgm-eq { display: none; align-items: flex-end; justify-content: center; gap: 2.5px; width: 18px; height: 16px; }
+.bgm-eq i { width: 3.5px; height: 45%; border-radius: 2px; background: currentColor; }
+.bgm-eq i:nth-child(2) { height: 85%; }
+.bgm-eq i:nth-child(3) { height: 60%; }
 .bgm-toggle.is-on .bgm-note { display: none; }
 .bgm-toggle.is-on .bgm-eq { display: flex; }
+.bgm-toggle.is-playing .bgm-eq i { animation: bgm-eq 1.1s ease-in-out infinite; }
+.bgm-toggle.is-playing .bgm-eq i:nth-child(2) { animation-delay: -.37s; }
+.bgm-toggle.is-playing .bgm-eq i:nth-child(3) { animation-delay: -.74s; }
 @keyframes bgm-eq { 0%, 100% { height: 30%; } 50% { height: 100%; } }
-@media (max-width: 959px) {
-  .bgm-toggle { width: 36px; padding: 0; justify-content: center; }
-  .bgm-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.bgm-toggle.is-intro::after {
+  content: ""; position: absolute; inset: -2px; border-radius: inherit; border: 2px solid var(--gold);
+  pointer-events: none; animation: bgm-ring 1.3s ease-out 2;
+}
+@keyframes bgm-ring { from { opacity: .9; transform: scale(1); } to { opacity: 0; transform: scale(1.3); } }
+@media (max-width: 600px) {
+  .bgm-toggle { height: 48px; padding: 0 20px 0 15px; font-size: .9375rem; right: max(12px, env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom)); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .bgm-eq i { animation: none; }
-  .bgm-eq i:nth-child(1) { height: 55%; }
-  .bgm-eq i:nth-child(2) { height: 100%; }
-  .bgm-eq i:nth-child(3) { height: 70%; }
+  .bgm-toggle.is-playing .bgm-eq i { animation: none; }
+  .bgm-toggle.is-intro::after { animation: none; display: none; }
 }
 </style>
 </head>
@@ -616,13 +626,6 @@ details.more > summary::-webkit-details-marker { display: none; }
       <a href="#projects">프로젝트</a>
       <a href="#contact">문의</a>
     </nav>
-    <button class="bgm-toggle" id="bgm-toggle" type="button">
-      <span class="bgm-ico" aria-hidden="true">
-        <svg class="bgm-note" viewBox="0 0 24 24" focusable="false"><path d="M9 17V5.6l10-2.1V15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.6" cy="17" r="2.4" fill="currentColor"/><circle cx="16.6" cy="15" r="2.4" fill="currentColor"/></svg>
-        <span class="bgm-eq"><i></i><i></i><i></i></span>
-      </span>
-      <span class="bgm-label">음악 켜기</span>
-    </button>
   </div>
 </header>
 
@@ -1417,21 +1420,38 @@ details.more > summary::-webkit-details-marker { display: none; }
   }
 })();
 </script>
-<audio id="bgm" src="bgm-training.mp3" preload="none" loop></audio>
+<button class="bgm-toggle is-on" id="bgm-toggle" type="button">
+  <span class="bgm-ico" aria-hidden="true">
+    <svg class="bgm-note" viewBox="0 0 24 24" focusable="false"><path d="M9 17V5.6l10-2.1V15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.6" cy="17" r="2.4" fill="currentColor"/><circle cx="16.6" cy="15" r="2.4" fill="currentColor"/></svg>
+    <span class="bgm-eq"><i></i><i></i><i></i></span>
+  </span>
+  <span class="bgm-label">음악 끄기</span>
+</button>
+<audio id="bgm" src="bgm-training.mp3" preload="auto" loop></audio>
 <script>
 (function () {
   var btn = document.getElementById("bgm-toggle");
   var audio = document.getElementById("bgm");
   if (!btn || !audio) return;
   var label = btn.querySelector(".bgm-label");
-  var wantOn = false;      // the visitor turned music on
-  var heldByVideo = false; // paused because a training video is playing
+  var KEY = "jjw-bgm";
+  var saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e) {}
+  var wantOn = saved !== "off";   // on unless this visitor turned it off before
+  var heldByVideo = false;          // paused because a training video is playing
+  var heldByHide = false;           // paused because the page went to the background
+  var started = false;
   var fadeTimer = null;
-  var LEVEL = 0.75;        // volume ceiling where the browser allows it
+  var LEVEL = 0.75;
+  var GESTURES = ["pointerdown", "pointerup", "touchend", "keydown", "click"];
 
   function render() {
     btn.classList.toggle("is-on", wantOn);
+    btn.classList.toggle("is-playing", wantOn && !audio.paused);
     label.textContent = wantOn ? "음악 끄기" : "음악 켜기";
+  }
+  function remember() {
+    try { localStorage.setItem(KEY, wantOn ? "on" : "off"); } catch (e) {}
   }
   function fade(to, ms, done) {
     clearInterval(fadeTimer);
@@ -1448,34 +1468,55 @@ details.more > summary::-webkit-details-marker { display: none; }
     });
   }
   function start() {
+    if (videoPlaying()) { heldByVideo = true; return Promise.resolve(false); }
     try { audio.volume = 0; } catch (e) {}
-    var p = audio.play();
-    if (p && p.catch) p.catch(function () { wantOn = false; heldByVideo = false; render(); });
-    fade(LEVEL, 1400);
-    if ("mediaSession" in navigator && window.MediaMetadata) {
-      navigator.mediaSession.metadata = new MediaMetadata({ title: "배경음악", artist: "정재우 포트폴리오" });
-    }
+    var p;
+    try { p = audio.play(); } catch (e) { return Promise.resolve(false); }
+    return Promise.resolve(p).then(function () {
+      fade(LEVEL, 1400);
+      if (!started) {
+        started = true;
+        btn.classList.add("is-intro");
+        setTimeout(function () { btn.classList.remove("is-intro"); }, 2800);
+      }
+      if ("mediaSession" in navigator && window.MediaMetadata) {
+        navigator.mediaSession.metadata = new MediaMetadata({ title: "배경음악", artist: "정재우 포트폴리오" });
+      }
+      render();
+      return true;
+    }, function () { render(); return false; });
   }
   function stop(ms) {
-    fade(0, ms, function () { audio.pause(); });
+    fade(0, ms, function () { audio.pause(); render(); });
   }
+
+  // Where the browser blocks sound until the visitor interacts, start on the first tap, click or key.
+  function onFirstGesture(e) {
+    if (btn.contains(e.target)) return;
+    if (!wantOn || started) { detach(); return; }
+    start().then(function (ok) { if (ok) detach(); });
+  }
+  function attach() { GESTURES.forEach(function (t) { document.addEventListener(t, onFirstGesture, true); }); }
+  function detach() { GESTURES.forEach(function (t) { document.removeEventListener(t, onFirstGesture, true); }); }
+
+  render();
+  if (wantOn) start().then(function (ok) { if (!ok && !started) attach(); });
 
   btn.addEventListener("click", function () {
     wantOn = !wantOn;
+    remember();
+    heldByVideo = false;
+    if (wantOn) { start(); } else { detach(); stop(400); }
     render();
-    if (wantOn) {
-      if (videoPlaying()) heldByVideo = true; else start();
-    } else {
-      heldByVideo = false;
-      stop(500);
-    }
   });
-  audio.addEventListener("error", function () { wantOn = false; heldByVideo = false; render(); });
+  audio.addEventListener("playing", render);
+  audio.addEventListener("pause", render);
+  audio.addEventListener("error", function () { wantOn = false; detach(); render(); });
 
   document.addEventListener("play", function (e) {
     if (e.target.tagName !== "VIDEO" || !wantOn) return;
     heldByVideo = true;
-    stop(250);
+    if (!audio.paused) stop(250);
   }, true);
   function resumeAfterVideo(e) {
     if (e.target.tagName !== "VIDEO") return;
@@ -1487,15 +1528,18 @@ details.more > summary::-webkit-details-marker { display: none; }
   document.addEventListener("ended", resumeAfterVideo, true);
 
   document.addEventListener("visibilitychange", function () {
-    if (!wantOn) return;
-    if (document.hidden) { clearInterval(fadeTimer); audio.pause(); }
-    else if (!videoPlaying()) { heldByVideo = false; start(); }
+    if (document.hidden) {
+      if (!audio.paused) { heldByHide = true; clearInterval(fadeTimer); audio.pause(); }
+    } else if (heldByHide) {
+      heldByHide = false;
+      if (wantOn && !videoPlaying()) start();
+    }
   });
 
   if ("mediaSession" in navigator) {
     try {
-      navigator.mediaSession.setActionHandler("pause", function () { wantOn = false; heldByVideo = false; render(); stop(200); });
-      navigator.mediaSession.setActionHandler("play", function () { wantOn = true; render(); start(); });
+      navigator.mediaSession.setActionHandler("pause", function () { wantOn = false; remember(); heldByVideo = false; stop(200); render(); });
+      navigator.mediaSession.setActionHandler("play", function () { wantOn = true; remember(); start(); render(); });
     } catch (e) {}
   }
 })();
